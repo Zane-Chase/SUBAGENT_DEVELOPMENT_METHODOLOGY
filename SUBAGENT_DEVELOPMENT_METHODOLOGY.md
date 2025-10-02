@@ -2,7 +2,7 @@
 
 > 基于 Sequential Thinking + 文档化工作流的 AI 协作开发方法
 >
-> **版本**: 1.0
+> **版本**: 0.0.8
 > **日期**: 2025-10-01
 > **适用**: 大型复杂项目的 AI 辅助开发
 
@@ -13,6 +13,7 @@
 - [方法论概述](#方法论概述)
 - [核心原理](#核心原理)
 - [架构设计](#架构设计)
+- [TDD 工作流程](#tdd-工作流程)
 - [Token 控制策略](#token-控制策略)
 - [文档化工作流](#文档化工作流)
 - [完整工作流程](#完整工作流程)
@@ -147,16 +148,8 @@ Subagent 并发开发是一种基于 **AI Agent 角色分工** 和 **文档化�
 
 ```
 dex_bot/
-├── SUBAGENT_DEVELOPMENT_METHODOLOGY.md   # 本文档
+├── SUBAGENT_DEVELOPMENT_METHODOLOGY.md   # 本文档（包含所有 Subagent 角色定义）
 ├── docs/
-│   ├── agents/                           # Subagent 角色定义
-│   │   ├── mainnet-integration-expert.md
-│   │   ├── risk-management-architect.md
-│   │   ├── strategy-optimizer.md
-│   │   ├── transaction-specialist.md
-│   │   ├── monitoring-engineer.md
-│   │   └── testing-architect.md
-│   │
 │   ├── tasks/                            # 任务输入（给 Subagent 的指令）
 │   │   ├── phase1/
 │   │   │   ├── task-1a-raydium-price-fetch.md
@@ -222,6 +215,424 @@ dex_bot/
 - **专长**：DevOps，渐进式部署
 - **职责**：设计 Shadow Mode、Paper Trading、Canary Deploy
 - **工作范围**：`src/phases/`, `tests/`
+
+#### 7. TDD Red-Phase Specialist 🔴
+
+**专长**：测试驱动开发，测试用例设计
+
+**核心职责**：
+- 编写失败的测试用例来明确功能需求
+- 从使用者角度设计清晰的 API
+- 覆盖正常、边界、异常场景
+- 使用 AAA 模式（Arrange-Act-Assert）
+
+**工作流程**：
+1. 理解需求 → 提取核心功能点
+2. 设计测试用例 → 编写测试代码
+3. 验证测试失败 → 确保测试有效
+4. 文档输出 → 记录测试用例和接口设计
+
+**最佳实践**：
+- ✅ 测试名称清晰描述行为
+- ✅ 一个测试只验证一个行为
+- ✅ 测试独立性（不依赖其他测试）
+- ✅ 覆盖边界条件和异常情况
+- ❌ 一次写太多测试
+- ❌ 测试之间相互依赖
+
+**Token 预算**：~23k tokens
+
+#### 8. TDD Green-Phase Developer 🟢
+
+**专长**：最小化实现，快速让测试通过
+
+**核心职责**：
+- 用最简单的代码让测试从红色变为绿色
+- 允许硬编码和"笨"方法
+- 专注当前测试，避免过度设计
+- 快速迭代，频繁运行测试
+
+**实现策略**：
+1. **硬编码优先（Fake It）**：直接返回测试期望的值
+2. **明显实现（Obvious Implementation）**：如果实现很简单，直接写出来
+3. **三角法（Triangulation）**：通过多个测试用例"三角定位"正确实现
+
+**工作流程**：
+1. 理解测试 → 查看测试文件和 RED 阶段文档
+2. 最小化实现 → 用最简单方式让测试通过
+3. 逐步完善 → 处理不同输入和边界情况
+4. 验证所有测试 → 确保全部通过
+5. 文档输出 → 记录实现方式和临时方案
+
+**最佳实践**：
+- ✅ 从最简单的测试开始
+- ✅ 频繁运行测试（使用 watch 模式）
+- ✅ 先硬编码，再泛化
+- ✅ 允许重复代码（REFACTOR 阶段会消除）
+- ❌ 过度设计和预先优化
+- ❌ 添加测试未要求的功能
+- ❌ 跳过失败的测试
+
+**Token 预算**：~23k tokens
+
+#### 9. TDD Refactor Specialist 🔧
+
+**专长**：代码重构，设计优化
+
+**核心职责**：
+- 在保持所有测试通过的前提下优化代码质量
+- 消除重复代码（DRY 原则）
+- 提升可读性和可维护性
+- 应用设计模式和最佳实践
+- 优化性能
+
+**重构技巧**：
+1. **提取方法（Extract Method）**：将长方法拆分为小方法
+2. **消除重复（Remove Duplication）**：提取公共逻辑
+3. **引入策略模式**：替换条件分支
+4. **替换魔法数字**：使用命名常量
+5. **简化条件表达式**：提高可读性
+
+**工作流程**：
+1. 评估当前代码 → 识别可改进的地方
+2. 制定重构计划 → 优先级排序
+3. 逐步重构 → 小步前进，频繁测试
+4. 验证质量 → 运行测试、检查覆盖率
+5. 文档输出 → 记录改进点和质量指标
+
+**代码质量检查**：
+- 消除代码异味（长方法、重复代码、魔法数字等）
+- 遵循 SOLID 原则
+- 提升测试覆盖率
+- 降低代码复杂度
+
+**最佳实践**：
+- ✅ 小步重构，每次只改一个地方
+- ✅ 频繁运行测试确保安全
+- ✅ 提交前后对比质量指标
+- ✅ 保持或提升测试覆盖率
+- ❌ 不要改变功能行为
+- ❌ 不要跳过测试
+- ❌ 不要一次改太多
+- ❌ 不要过度重构
+
+**Token 预算**：~23k tokens
+
+---
+
+## TDD 工作流程
+
+### 什么是测试驱动开发 (TDD)？
+
+TDD 是一种软件开发过程，核心理念是**"先写测试，再写实现"**。开发者首先编写一个简短的、描述新功能或改进的自动化测试用例，这个测试在最初必然是失败的。然后，开发者编写最少的代码来让这个测试通过。最后，对新代码进行重构，以符合编码规范。
+
+### TDD 核心流程：红-绿-重构 (Red-Green-Refactor)
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    TDD 循环流程                          │
+│                                                         │
+│   🔴 RED                                               │
+│   写一个失败的测试                                        │
+│   ↓                                                     │
+│   - 明确功能需求和期望行为                                │
+│   - 测试必须失败（证明功能尚未实现）                        │
+│   - 思考输入、输出和边界条件                               │
+│                                                         │
+│   🟢 GREEN                                             │
+│   写最少代码让测试通过                                     │
+│   ↓                                                     │
+│   - 快速实现，不求完美                                    │
+│   - 只关注让测试变绿                                      │
+│   - 避免过度设计                                         │
+│                                                         │
+│   🔧 REFACTOR                                          │
+│   优化代码质量                                           │
+│   ↓                                                     │
+│   - 消除重复代码                                         │
+│   - 提高可读性和可维护性                                  │
+│   - 优化设计和性能                                       │
+│   - 确保测试依然通过                                     │
+│                                                         │
+│   ↻ 回到 RED，开始下一个功能                             │
+└─────────────────────────────────────────────────────────┘
+```
+
+#### 阶段 1: 红色 (Red) - 写一个失败的测试
+
+**目标**: 明确你想要实现的功能是什么
+
+**操作**:
+- 针对一个极小的功能点，编写自动化测试
+- 因为还没有实现代码，测试必然失败（红色）
+- 测试失败可能是编译错误或断言失败
+
+**意义**:
+- 强迫思考需求和功能细节
+- 明确输入、输出和期望行为
+- 建立清晰的成功标准
+
+**示例**:
+```typescript
+// tests/raydium-price-fetch.test.ts
+describe('RaydiumPriceFetcher', () => {
+  it('should fetch SOL/USDC price from mainnet', async () => {
+    const fetcher = new RaydiumPriceFetcher();
+    const price = await fetcher.getPrice('SOL/USDC');
+
+    expect(price).toBeDefined();
+    expect(price.value).toBeGreaterThan(0);
+    expect(price.source).toBe('raydium');
+  });
+});
+
+// 运行测试 → ❌ 失败（RaydiumPriceFetcher 类还不存在）
+```
+
+#### 阶段 2: 绿色 (Green) - 写最少代码让测试通过
+
+**目标**: 快速实现功能，满足测试要求
+
+**操作**:
+- 编写刚好能让测试通过的代码
+- 不追求完美，允许"笨"方法
+- 关键在于"最少" - 只做必要的事
+
+**意义**:
+- 专注于当前唯一目标：满足测试
+- 避免过度工程和偏离需求
+- 快速获得反馈
+
+**示例**:
+```typescript
+// src/raydium-price-fetcher.ts
+export class RaydiumPriceFetcher {
+  async getPrice(pair: string): Promise<PriceData> {
+    // 最简单的实现 - 先让测试通过
+    return {
+      value: 142.35,  // 硬编码一个合理值
+      source: 'raydium'
+    };
+  }
+}
+
+// 运行测试 → ✅ 通过（虽然是硬编码，但测试通过了）
+```
+
+#### 阶段 3: 重构 (Refactor) - 优化代码
+
+**目标**: 在不改变外部行为的前提下提升代码质量
+
+**操作**:
+- 有测试作为"安全网"，可以放心重构
+- 消除重复代码
+- 提高可读性和可维护性
+- 优化算法和设计
+- 每次修改后重新运行测试
+
+**意义**:
+- 确保代码长期可维护
+- 提升代码质量和性能
+- 测试保护让你敢于重构
+
+**示例**:
+```typescript
+// src/raydium-price-fetcher.ts
+import { Connection } from '@solana/web3.js';
+import { Liquidity } from '@raydium-io/raydium-sdk';
+
+export class RaydiumPriceFetcher {
+  private connection: Connection;
+
+  constructor(rpcUrl: string) {
+    this.connection = new Connection(rpcUrl);
+  }
+
+  async getPrice(pair: string): Promise<PriceData> {
+    const [tokenA, tokenB] = this.parsePair(pair);
+    const poolInfo = await this.fetchPoolInfo(tokenA, tokenB);
+
+    return {
+      value: this.calculatePrice(poolInfo),
+      source: 'raydium',
+      timestamp: Date.now()
+    };
+  }
+
+  private parsePair(pair: string): [string, string] {
+    const tokens = pair.split('/');
+    if (tokens.length !== 2) {
+      throw new Error(`Invalid pair format: ${pair}`);
+    }
+    return [tokens[0], tokens[1]];
+  }
+
+  private async fetchPoolInfo(tokenA: string, tokenB: string) {
+    // 真实的 Raydium pool 查询逻辑
+    // ...
+  }
+
+  private calculatePrice(poolInfo: any): number {
+    // 价格计算逻辑
+    // ...
+  }
+}
+
+// 运行测试 → ✅ 依然通过（重构成功！）
+```
+
+### TDD 与 Subagent 方法论的整合
+
+在 Subagent 并发开发方法论中，TDD 可以通过专门的 Subagent 角色来实现：
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           Controller (Sequential Thinking)              │
+│         分析需求 → 分解为 TDD 任务 → 分配角色             │
+└─────────────────────────────────────────────────────────┘
+                         │
+          ┌──────────────┼──────────────┐
+          │              │              │
+    ┌─────▼─────┐  ┌─────▼─────┐  ┌────▼──────┐
+    │  Red 🔴   │→ │ Green 🟢  │→ │Refactor🔧 │
+    │  写测试    │  │  写实现    │  │  优化代码  │
+    └───────────┘  └───────────┘  └───────────┘
+          │              │              │
+          └──────────────┴──────────────┘
+                         │
+                   ↻ 循环迭代
+```
+
+#### TDD 任务文档模板
+
+```markdown
+# Task [ID]: [功能名称] - TDD 循环
+
+## Phase: RED 🔴
+### Role
+TDD Red-Phase Specialist
+
+### Objective
+为 [功能名称] 编写失败的测试用例
+
+### Requirements
+1. 编写测试用例描述预期行为
+2. 确保测试失败（功能未实现）
+3. 覆盖正常情况和边界情况
+4. 测试应该清晰、可读
+
+### Output Location
+docs/outputs/tdd/[feature]-red-phase.md
+
+---
+
+## Phase: GREEN 🟢
+### Role
+TDD Green-Phase Developer
+
+### Objective
+编写最少代码让测试通过
+
+### Input
+- 测试文件：tests/[feature].test.ts
+- RED 阶段输出：docs/outputs/tdd/[feature]-red-phase.md
+
+### Requirements
+1. 实现功能让所有测试通过
+2. 代码尽可能简单
+3. 不追求完美设计
+4. 确保测试覆盖率
+
+### Output Location
+docs/outputs/tdd/[feature]-green-phase.md
+
+---
+
+## Phase: REFACTOR 🔧
+### Role
+TDD Refactor Specialist
+
+### Objective
+优化代码质量，保持测试通过
+
+### Input
+- GREEN 阶段输出：docs/outputs/tdd/[feature]-green-phase.md
+- 测试文件：tests/[feature].test.ts
+
+### Requirements
+1. 消除重复代码
+2. 提高可读性
+3. 优化性能和设计
+4. 确保所有测试依然通过
+
+### Output Location
+docs/outputs/tdd/[feature]-refactor-phase.md
+```
+
+### TDD 并发执行策略
+
+对于多个独立功能，可以并发执行多个 TDD 循环：
+
+```
+功能 A: RED → GREEN → REFACTOR  ─┐
+功能 B: RED → GREEN → REFACTOR  ─┤
+功能 C: RED → GREEN → REFACTOR  ─┼→ Controller 整合
+功能 D: RED → GREEN → REFACTOR  ─┘
+
+每个功能独立的 TDD 循环，互不干扰
+```
+
+### TDD 最佳实践
+
+#### ✅ DO（推荐做法）
+
+**RED 阶段**:
+- 一次只测试一个小功能点
+- 测试名称清晰描述行为
+- 确保测试真的失败（不是假阳性）
+- 测试要简单、快速、独立
+
+**GREEN 阶段**:
+- 写最简单能通过的代码
+- 允许硬编码和"笨"方法
+- 不要跳跃式实现多个功能
+- 快速获得绿色测试
+
+**REFACTOR 阶段**:
+- 频繁运行测试确保安全
+- 小步重构，每次一个改进
+- 消除重复（DRY 原则）
+- 提取方法、类、模块
+
+#### ❌ DON'T（避免做法）
+
+**RED 阶段**:
+- 一次写太多测试
+- 测试之间相互依赖
+- 测试名称模糊不清
+- 忘记运行测试确认失败
+
+**GREEN 阶段**:
+- 过度设计和预先优化
+- 实现超出测试要求的功能
+- 跳过测试直接写实现
+- 修改测试让其通过
+
+**REFACTOR 阶段**:
+- 修改功能行为
+- 在没有测试保护下重构
+- 大规模重构不分步
+- 重构时添加新功能
+
+### TDD 的优势
+
+1. **需求明确**: 测试即文档，清晰描述功能
+2. **设计驱动**: 先考虑接口，促进良好设计
+3. **快速反馈**: 立即知道代码是否正确
+4. **回归保护**: 测试防止破坏现有功能
+5. **重构信心**: 有测试保护，敢于改进代码
+6. **减少调试**: 问题早发现，调试时间少
+7. **文档化**: 测试是最好的使用示例
 
 ---
 
@@ -734,9 +1145,289 @@ Controller 更新 `docs/progress/phase1-progress.md`
 
 ---
 
+## TDD 与 Subagent 方法论整合
+
+### 整合优势
+
+将 TDD 工作流程与 Subagent 并发开发相结合，可以获得以下优势：
+
+1. **质量保证**：TDD 确保每个功能都有测试覆盖
+2. **并发开发**：多个功能的 TDD 循环可以并发进行
+3. **渐进式交付**：每个 TDD 循环都是一个可交付的增量
+4. **文档化**：每个阶段都有详细的文档记录
+
+### 实际工作流程
+
+#### 场景：实现 4 个独立的数据获取功能
+
+```
+Controller 分析和规划
+         ↓
+┌────────┴────────┬────────┬────────┐
+│                 │        │        │
+功能 A            功能 B   功能 C   功能 D
+Raydium价格      Orca价格  监控    Shadow模式
+│                 │        │        │
+├─ RED 🔴        ├─ RED    ├─ RED   ├─ RED
+│  ↓             │  ↓      │  ↓     │  ↓
+├─ GREEN 🟢      ├─ GREEN  ├─ GREEN ├─ GREEN
+│  ↓             │  ↓      │  ↓     │  ↓
+└─ REFACTOR 🔧   └─ REFAC  └─ REFAC └─ REFAC
+         │                 │        │        │
+         └────────┬────────┴────────┴────────┘
+                  ↓
+         Controller 整合和验证
+```
+
+#### 并发执行策略
+
+**第一轮：RED 阶段并发**
+
+Controller 创建 4 个 RED 任务文档，并发启动 4 个 TDD Red-Phase Specialist：
+
+```markdown
+任务 1a: Raydium 价格获取 - RED
+任务 1b: Orca 价格获取 - RED
+任务 1c: 监控框架 - RED
+任务 1d: Shadow 模式执行器 - RED
+
+并发执行：4 × 23k tokens = 92k tokens
+```
+
+所有 Subagent 完成后，Controller 收集输出：
+- 4 个测试文件
+- 4 个 RED 阶段输出文档
+- 所有测试都是失败状态（符合预期）
+
+**第二轮：GREEN 阶段并发**
+
+Controller 创建 4 个 GREEN 任务文档，并发启动 4 个 TDD Green-Phase Developer：
+
+```markdown
+任务 1a: Raydium 价格获取 - GREEN
+任务 1b: Orca 价格获取 - GREEN
+任务 1c: 监控框架 - GREEN
+任务 1d: Shadow 模式执行器 - GREEN
+
+并发执行：4 × 23k tokens = 92k tokens
+```
+
+所有 Subagent 完成后，Controller 收集输出：
+- 4 个实现文件
+- 4 个 GREEN 阶段输出文档
+- 所有测试都通过（绿色状态）
+
+**第三轮：REFACTOR 阶段并发**
+
+Controller 创建 4 个 REFACTOR 任务文档，并发启动 4 个 TDD Refactor Specialist：
+
+```markdown
+任务 1a: Raydium 价格获取 - REFACTOR
+任务 1b: Orca 价格获取 - REFACTOR
+任务 1c: 监控框架 - REFACTOR
+任务 1d: Shadow 模式执行器 - REFACTOR
+
+并发执行：4 × 23k tokens = 92k tokens
+```
+
+所有 Subagent 完成后，Controller 收集输出：
+- 4 个优化后的实现文件
+- 4 个 REFACTOR 阶段输出文档
+- 所有测试依然通过，代码质量提升
+
+### TDD 任务文档完整示例
+
+```markdown
+# Task Group 1: Raydium 价格获取功能 - TDD 完整循环
+
+## Task 1a-RED: Raydium 价格获取 - 编写测试
+
+### Role
+TDD Red-Phase Specialist
+
+### Objective
+为 Raydium mainnet 价格获取功能编写失败的测试用例
+
+### Context
+- 当前系统使用模拟数据
+- 需要集成真实的 Raydium SDK
+- 支持常见代币对（SOL/USDC, SOL/USDT 等）
+
+### Requirements
+1. 测试正常情况：成功获取价格
+2. 测试边界情况：无效代币对、空值处理
+3. 测试异常情况：网络失败、重试机制
+4. 测试性能：延迟应 <500ms
+5. 测试缓存：相同请求应使用缓存
+
+### Output Location
+docs/outputs/tdd/phase1/raydium-red.md
+
+### Success Criteria
+- [ ] 至少 5 个测试用例
+- [ ] 覆盖正常、边界、异常场景
+- [ ] 所有测试失败（功能未实现）
+- [ ] 测试代码清晰可读
+
+---
+
+## Task 1a-GREEN: Raydium 价格获取 - 实现功能
+
+### Role
+TDD Green-Phase Developer
+
+### Objective
+实现 Raydium 价格获取功能，让所有测试通过
+
+### Input
+- 测试文件：tests/raydium-price-fetcher.test.ts
+- RED 阶段输出：docs/outputs/tdd/phase1/raydium-red.md
+
+### Requirements
+1. 让所有测试从红色变为绿色
+2. 使用最简单的实现方式
+3. 允许硬编码和临时方案
+4. 不追求完美设计
+
+### Output Location
+docs/outputs/tdd/phase1/raydium-green.md
+
+### Success Criteria
+- [ ] 所有测试通过
+- [ ] 代码简单直接
+- [ ] 满足所有功能要求
+
+---
+
+## Task 1a-REFACTOR: Raydium 价格获取 - 优化代码
+
+### Role
+TDD Refactor Specialist
+
+### Objective
+优化代码质量，保持测试通过
+
+### Input
+- GREEN 阶段输出：docs/outputs/tdd/phase1/raydium-green.md
+- 实现文件：src/raydium-price-fetcher.ts
+- 测试文件：tests/raydium-price-fetcher.test.ts
+
+### Requirements
+1. 消除重复代码
+2. 提取方法，提升可读性
+3. 应用设计模式（如需要）
+4. 优化性能
+5. 确保所有测试依然通过
+
+### Output Location
+docs/outputs/tdd/phase1/raydium-refactor.md
+
+### Success Criteria
+- [ ] 代码质量提升
+- [ ] 无重复代码
+- [ ] 方法平均长度 <15 行
+- [ ] 所有测试通过
+- [ ] 测试覆盖率 ≥90%
+```
+
+### Token 使用优化
+
+通过 TDD 三阶段方法，每个功能的 token 使用如下：
+
+```
+RED 阶段:    ~23k tokens (测试编写)
+GREEN 阶段:  ~23k tokens (功能实现)
+REFACTOR 阶段: ~23k tokens (代码优化)
+─────────────────────────────────
+总计:        ~69k tokens (单个功能完整 TDD 循环)
+```
+
+**并发执行 4 个功能**：
+- RED 阶段并发：   4 × 23k = 92k tokens
+- GREEN 阶段并发： 4 × 23k = 92k tokens
+- REFACTOR 阶段并发：4 × 23k = 92k tokens
+
+**总计**：约 276k tokens，分 3 轮执行
+
+**串行执行对比**：
+- 如果串行执行，需要 12 次任务（4 功能 × 3 阶段）
+- 时间消耗：12 次交互
+- 并发执行只需 3 次交互（每个阶段一次）
+
+**效率提升**：**4 倍**（12 次 → 3 次）
+
+### 实际应用建议
+
+#### 何时使用 TDD + Subagent
+
+**✅ 推荐场景**：
+1. **新功能开发**：需求明确，可以先写测试
+2. **Bug 修复**：先写复现 bug 的测试，再修复
+3. **重构优化**：已有测试保护，放心重构
+4. **API 开发**：接口设计先行，TDD 最合适
+5. **关键模块**：风险管理、交易执行等核心功能
+
+**❌ 不推荐场景**：
+1. **探索性开发**：需求不明确，难以先写测试
+2. **快速原型**：验证想法阶段，测试成本高
+3. **简单脚本**：一次性任务，无需测试
+4. **UI 调整**：视觉效果难以自动化测试
+
+#### 混合模式
+
+对于复杂项目，可以混合使用：
+
+```
+核心功能（数据集成、风险控制）
+  → 使用 TDD + Subagent（高质量，有测试）
+
+辅助功能（日志、配置）
+  → 使用传统 Subagent（快速实现）
+
+原型验证（新策略尝试）
+  → 快速开发，验证后再 TDD 重写
+```
+
+### 进度跟踪示例
+
+```markdown
+# Phase 1: Shadow Mode - TDD 进度
+
+## 功能 A: Raydium 价格获取
+- ✅ RED 阶段完成（2025-10-02 10:00）
+- ✅ GREEN 阶段完成（2025-10-02 10:30）
+- ✅ REFACTOR 阶段完成（2025-10-02 11:00）
+- 📄 输出文档：
+  - docs/outputs/tdd/phase1/raydium-red.md
+  - docs/outputs/tdd/phase1/raydium-green.md
+  - docs/outputs/tdd/phase1/raydium-refactor.md
+
+## 功能 B: Orca 价格获取
+- ✅ RED 阶段完成
+- ✅ GREEN 阶段完成
+- 🔄 REFACTOR 阶段进行中
+
+## 功能 C: 监控框架
+- ✅ RED 阶段完成
+- 🔄 GREEN 阶段进行中
+- 📅 REFACTOR 阶段待开始
+
+## 功能 D: Shadow 模式执行器
+- 🔄 RED 阶段进行中
+- 📅 GREEN 阶段待开始
+- 📅 REFACTOR 阶段待开始
+
+## 总体进度
+- 已完成：5/12 任务（42%）
+- 进行中：2/12 任务
+- 待开始：5/12 任务
+```
+
+---
+
 ## 实际应用示例
 
-### 案例：Raydium 真实数据集成
+### 案例：Raydium 真实数据集成（使用 TDD 方法）
 
 #### Step 1: 创建任务文档
 ```markdown
@@ -994,6 +1685,7 @@ Controller 读取输出文档，使用 Sequential Thinking 分析：
 ---
 
 **版本历史**:
+- v0.0.9 (2025-10-02): 添加 TDD 工作流程和 TDD Subagent 角色定义
 - v0.0.8 (2025-10-01): 初始版本，基于 DEX Bot 项目实践总结
 
 **维护者**: Claude AI + 人类协作
