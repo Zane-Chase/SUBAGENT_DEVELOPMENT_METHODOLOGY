@@ -2,8 +2,8 @@
 
 > 基于 Sequential Thinking + 文档化工作流的 AI 协作开发方法
 >
-> **版本**: 0.0.10
-> **日期**: 2025-10-02
+> **版本**: 0.0.11
+> **日期**: 2025-10-06
 > **适用**: 大型复杂项目的 AI 辅助开发
 
 ---
@@ -19,6 +19,13 @@
 - [完整工作流程](#完整工作流程)
 - [优点总结](#优点总结)
 - [最佳实践](#最佳实践)
+  - [任务设计原则](#1-任务设计原则)
+  - [调试日志规范](#11-调试日志规范-)
+  - [测试验证规范](#12-测试验证规范-)
+  - [文档编写原则](#2-文档编写原则)
+  - [Subagent 角色设计](#3-subagent-角色设计)
+  - [Controller 决策原则](#4-controller-决策原则)
+  - [Token 预算监控](#5-token-预算监控)
 - [实际应用示例](#实际应用示例)
 
 ---
@@ -764,11 +771,14 @@ docs/outputs/[phase]/output-[id]-[name].md
 1. 功能要求 1
 2. 功能要求 2
 3. 非功能要求（性能、安全等）
+4. **⚠️ 必须添加终端调试日志**（函数入口、出口、关键分支、错误处理）
+5. **⚠️ 前端代码日志必须输出到终端**（不仅是浏览器控制台）
 
 ## Constraints
 - 保持与现有接口兼容
 - 遵循项目代码规范
 - 添加必要的错误处理
+- 所有日志使用统一格式：`[级别] [模块名] 消息内容`
 
 ## Output Location
 docs/outputs/[phase]/output-[id]-[name].md
@@ -778,7 +788,9 @@ docs/outputs/[phase]/output-[id]-[name].md
 
 ## Success Criteria
 - [ ] 功能实现完整
-- [ ] 测试通过
+- [ ] 所有关键节点添加了日志输出
+- [ ] 运行项目后终端日志无错误
+- [ ] 测试通过（包括终端日志验证）
 - [ ] 文档完善
 ```
 
@@ -817,6 +829,34 @@ docs/outputs/[phase]/output-[id]-[name].md
 - ✅ 测试 A 通过
 - ✅ 测试 B 通过
 - ⏱️ 性能：平均 150ms
+
+### 终端日志验证
+**项目运行测试**：
+```bash
+# 运行命令
+npm run dev
+
+# 终端输出（关键日志）
+[INFO] [ModuleName] Function started with params: {...}
+[INFO] [ModuleName] Step 1 completed
+[INFO] [ModuleName] Step 2 completed
+[INFO] [ModuleName] SUCCESS - Result: {...}
+```
+
+**验证结果**：
+- ✅ 项目成功启动，无启动错误
+- ✅ 终端日志无 ERROR 输出
+- ✅ 所有关键操作都有日志记录
+- ✅ 错误处理路径日志完整
+- ✅ 前端日志在终端可见（非仅浏览器控制台）
+- ✅ 连续 3 次运行无问题
+
+**日志覆盖情况**：
+- [✅] 函数入口日志
+- [✅] 关键分支日志
+- [✅] 外部调用日志（API/RPC/DB）
+- [✅] 错误处理日志（含堆栈）
+- [✅] 函数出口日志
 
 ## Usage
 
@@ -1055,6 +1095,259 @@ Controller 更新 `docs/progress/phase1-progress.md`
 - **职责混杂**：一个任务涉及多个领域
 - **模糊目标**：没有明确的成功标准
 - **跳过文档**：直接在 prompt 中写大量代码
+
+### 1.1 调试日志规范 🔍
+
+#### 核心原则
+**所有代码必须输出终端调试日志，包括前端和后端代码**
+
+#### 日志要求
+
+**✅ 必须做到**：
+- **后端日志**：使用 `console.log/console.error` 输出到终端
+- **前端日志**：使用服务端日志或 Node.js 日志输出到终端，**不要只输出到浏览器控制台**
+- **关键节点**：函数入口、出口、关键分支、错误处理都要记录
+- **上下文信息**：包含必要的参数值、状态信息、时间戳
+- **错误堆栈**：捕获并输出完整的错误堆栈信息
+- **分级输出**：区分 INFO、WARN、ERROR 等级别
+
+**日志格式示例**：
+```typescript
+// 后端 - Node.js/Express
+console.log('[INFO] [RaydiumPriceFetcher] Fetching price for:', tokenPair);
+console.error('[ERROR] [RaydiumPriceFetcher] Failed to fetch price:', error.message, error.stack);
+
+// 前端 - Next.js Server Component
+console.log('[INFO] [PriceDisplay] Rendering price component:', { price, timestamp });
+
+// 前端 - API Route
+export async function GET(request: Request) {
+  console.log('[INFO] [API /api/price] Request received:', request.url);
+  // ...
+  console.log('[INFO] [API /api/price] Response:', result);
+}
+```
+
+**❌ 禁止做法**：
+- 前端代码仅使用 `console.log` 输出到浏览器控制台
+- 缺少关键操作的日志记录
+- 日志信息不包含上下文
+- 吞掉错误不输出堆栈
+
+#### 日志覆盖范围
+
+**必须记录的场景**：
+1. **函数入口**：记录参数和调用时间
+2. **外部调用**：API 请求、数据库查询、RPC 调用
+3. **条件分支**：重要的 if/else、switch 分支
+4. **循环操作**：批量处理的进度和结果
+5. **错误处理**：所有 try/catch 块
+6. **异步操作**：Promise、async/await 的状态
+7. **状态变更**：关键数据的修改
+
+**日志示例**：
+```typescript
+async function fetchRaydiumPrice(tokenPair: string): Promise<PriceData | null> {
+  console.log(`[INFO] [fetchRaydiumPrice] START - tokenPair: ${tokenPair}, timestamp: ${Date.now()}`);
+
+  const maxRetries = 3;
+  let attempt = 0;
+
+  while (attempt < maxRetries) {
+    attempt++;
+    console.log(`[INFO] [fetchRaydiumPrice] Attempt ${attempt}/${maxRetries}`);
+
+    try {
+      const connection = new Connection(process.env.SOLANA_RPC_URL!);
+      console.log(`[INFO] [fetchRaydiumPrice] Connection established to RPC`);
+
+      const poolInfo = await this.getRaydiumPool(tokenPair);
+      console.log(`[INFO] [fetchRaydiumPrice] Pool info retrieved:`, poolInfo ? 'success' : 'not found');
+
+      if (!poolInfo) {
+        throw new Error(`Pool not found for ${tokenPair}`);
+      }
+
+      const price = this.calculatePrice(poolInfo);
+      console.log(`[INFO] [fetchRaydiumPrice] Price calculated: ${price}`);
+
+      const result = {
+        tokenPair,
+        price,
+        timestamp: Date.now(),
+        source: 'raydium'
+      };
+
+      console.log(`[INFO] [fetchRaydiumPrice] SUCCESS - Result:`, JSON.stringify(result));
+      return result;
+
+    } catch (error) {
+      console.error(`[ERROR] [fetchRaydiumPrice] Attempt ${attempt} failed:`, error.message);
+      console.error(`[ERROR] [fetchRaydiumPrice] Stack trace:`, error.stack);
+
+      if (attempt >= maxRetries) {
+        console.error(`[ERROR] [fetchRaydiumPrice] FAILED - All ${maxRetries} attempts exhausted`);
+        return null;
+      }
+
+      const delay = Math.pow(2, attempt) * 1000;
+      console.log(`[INFO] [fetchRaydiumPrice] Retrying in ${delay}ms...`);
+      await this.sleep(delay);
+    }
+  }
+
+  console.log(`[INFO] [fetchRaydiumPrice] END - Returning null`);
+  return null;
+}
+```
+
+### 1.2 测试验证规范 ✅
+
+#### 核心原则
+**每次代码实现完成后，必须运行项目并检查终端日志，确保没有错误或警告**
+
+#### 测试流程
+
+**✅ 必须执行的步骤**：
+
+1. **运行项目**
+   ```bash
+   # 后端项目
+   npm run dev
+   # 或
+   npm start
+
+   # 前端项目
+   npm run dev
+   # 或
+   yarn dev
+   ```
+
+2. **观察终端日志**
+   - 检查启动过程中是否有错误
+   - 检查是否有未捕获的异常
+   - 检查是否有废弃 API 警告
+   - 检查是否有类型错误
+
+3. **触发代码路径**
+   - 访问相关页面或 API 端点
+   - 触发新实现的功能
+   - 验证日志输出符合预期
+
+4. **检查日志质量**
+   - 确认关键操作有日志输出
+   - 确认日志信息完整（包含上下文）
+   - 确认错误有完整堆栈信息
+   - 确认日志级别正确（INFO/WARN/ERROR）
+
+5. **修复问题**
+   - 如果发现错误，立即修复
+   - 如果发现警告，评估并处理
+   - 重新运行测试直到没有问题
+
+#### 验证清单
+
+**在提交代码前必须确认**：
+
+- [ ] 项目能够成功启动，无启动错误
+- [ ] 终端日志中没有 ERROR 级别的输出
+- [ ] 终端日志中没有未处理的 Promise rejection
+- [ ] 新功能的日志输出完整且清晰
+- [ ] 错误处理路径有正确的日志输出
+- [ ] 没有冗余或垃圾日志（如过度的 debug 信息）
+- [ ] 前端代码的日志在终端可见（不仅在浏览器控制台）
+
+#### 常见问题检查
+
+**必须排查的问题**：
+
+1. **类型错误**
+   ```
+   ❌ TypeError: Cannot read property 'xxx' of undefined
+   ✅ 检查对象是否存在，添加可选链或默认值
+   ```
+
+2. **异步错误**
+   ```
+   ❌ UnhandledPromiseRejectionWarning
+   ✅ 所有 Promise 必须有 .catch() 或在 try/catch 中
+   ```
+
+3. **环境变量**
+   ```
+   ❌ process.env.XXX is undefined
+   ✅ 检查 .env 文件配置，添加默认值或错误提示
+   ```
+
+4. **依赖缺失**
+   ```
+   ❌ Cannot find module 'xxx'
+   ✅ 运行 npm install 或 yarn install
+   ```
+
+5. **端口占用**
+   ```
+   ❌ EADDRINUSE: address already in use :::3000
+   ✅ 更换端口或关闭占用进程
+   ```
+
+#### 日志验证示例
+
+**良好的测试输出**：
+```
+[INFO] [Server] Starting on port 3000...
+[INFO] [Database] Connecting to MongoDB...
+[INFO] [Database] Connected successfully
+[INFO] [RaydiumPriceFetcher] Initializing with RPC: https://api.mainnet-beta.solana.com
+[INFO] [Server] Server ready on http://localhost:3000
+
+[INFO] [API /api/price] Request received: /api/price?pair=SOL/USDC
+[INFO] [fetchRaydiumPrice] START - tokenPair: SOL/USDC, timestamp: 1696234567890
+[INFO] [fetchRaydiumPrice] Attempt 1/3
+[INFO] [fetchRaydiumPrice] Connection established to RPC
+[INFO] [fetchRaydiumPrice] Pool info retrieved: success
+[INFO] [fetchRaydiumPrice] Price calculated: 142.35
+[INFO] [fetchRaydiumPrice] SUCCESS - Result: {"tokenPair":"SOL/USDC","price":142.35,"timestamp":1696234567890,"source":"raydium"}
+[INFO] [API /api/price] Response: {"success":true,"data":{"price":142.35}}
+```
+
+**有问题的测试输出**（需要修复）：
+```
+[INFO] [Server] Starting on port 3000...
+[INFO] [Database] Connecting to MongoDB...
+[ERROR] [Database] Connection failed: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27017
+    at connectionFailureError (/app/node_modules/mongodb/lib/core/connection/connect.js:362:14)
+    at Socket.<anonymous> (/app/node_modules/mongodb/lib/core/connection/connect.js:330:16)
+    ...
+❌ 需要修复：检查 MongoDB 连接配置或启动 MongoDB 服务
+
+[INFO] [API /api/price] Request received: /api/price?pair=SOL/USDC
+[ERROR] [fetchRaydiumPrice] Attempt 1 failed: Cannot read property 'baseReserve' of null
+[ERROR] [fetchRaydiumPrice] Stack trace: TypeError: Cannot read property 'baseReserve' of null
+    at RaydiumPriceFetcher.calculatePrice (/app/src/fetcher.ts:45:30)
+    ...
+❌ 需要修复：添加 null 检查或改进错误处理
+```
+
+#### 持续改进
+
+**迭代循环**：
+```
+1. 实现代码 + 添加日志
+   ↓
+2. 运行项目
+   ↓
+3. 检查终端日志
+   ↓
+4. 发现问题？
+   ├─ 是 → 修复代码 → 回到步骤 2
+   └─ 否 → 测试通过 ✅
+```
+
+**成功标准**：
+- 连续 3 次运行都没有错误
+- 所有功能路径都被触发并有日志记录
+- 日志输出清晰、完整、易于调试
 
 ### 2. 文档编写原则
 
@@ -1685,6 +1978,7 @@ Controller 读取输出文档，使用 Sequential Thinking 分析：
 ---
 
 **版本历史**:
+- v0.0.11 (2025-10-06): 添加调试日志规范和测试验证规范，强化代码质量控制
 - v0.0.10 (2025-10-02): 整合 TDD Subagent 角色定义到主文档，移除独立角色文件
 - v0.0.9 (2025-10-02): 添加 TDD 工作流程和 TDD Subagent 角色定义
 - v0.0.8 (2025-10-01): 初始版本，基于 DEX Bot 项目实践总结
